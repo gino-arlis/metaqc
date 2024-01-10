@@ -29,4 +29,5 @@ def get_wos_labels_dict():
     dict_info['PT'] = 'Publication Type'
     dict_info['OI'] = 'ORCID Identifier'
     dict_info['Z9'] = 'Total Times Cited Count'
+
     return dict_info

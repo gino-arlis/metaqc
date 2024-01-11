@@ -50,19 +50,33 @@ def get_dicts(df):
 def add_authors(authors_d, record):
     
     wos_identifier = record['Accession Number']
-    authors_list = get_authors_list(record)
-    for author in authors_list:
-        if author in authors_d:
-            authors_d[author]['papers'].append(wos_identifier)
+    authors_dicts = get_authors_dicts(record)
+
+
+    for author_dict in authors_dicts:
+        if author_dict['full name'] in authors_d:
+            authors_d[author_dict['full name']]['papers'].append(wos_identifier)
         else:
-            authors_d[author] = {'papers': [wos_identifier]}
+            authors_d[author_dict['full name']] = author_dict
             
     return authors_d
 
 
-def get_authors_list(record):
+def get_authors_dicts(record):
+
+    wos_identifier = record['Accession Number']
     
     authors_list = record['Authors'].split(';')
     authors_list = [item.strip(' ') for item in authors_list]
     
-    return authors_list
+    author_full_name_list = record['Author Full Name'].split(';')
+    author_full_name_list = [item.strip(' ') for item in author_full_name_list]
+
+    authors_dicts = list()
+    for name, full_name in zip(authors_list, author_full_name_list):
+        authors_dicts.append({'name':name, 
+                             'full name':full_name, 
+                             'papers':[wos_identifier]})
+        
+    return authors_dicts
+

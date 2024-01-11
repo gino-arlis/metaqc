@@ -31,3 +31,38 @@ def get_wos_labels_dict():
     dict_info['Z9'] = 'Total Times Cited Count'
 
     return dict_info
+
+
+def get_dicts(df):
+    
+    authors_d = dict()
+    papers_d = dict()
+    institutions_d = dict()
+
+    for idx,record in df.iterrows():
+        
+        # Add authors
+        authors_d = add_authors(authors_d, record)
+    
+    return authors_d, papers_d , institutions_d
+
+
+def add_authors(authors_d, record):
+    
+    wos_identifier = record['Accession Number']
+    authors_list = get_authors_list(record)
+    for author in authors_list:
+        if author in authors_d:
+            authors_d[author]['papers'].append(wos_identifier)
+        else:
+            authors_d[author] = {'papers': [wos_identifier]}
+            
+    return authors_d
+
+
+def get_authors_list(record):
+    
+    authors_list = record['Authors'].split(';')
+    authors_list = [item.strip(' ') for item in authors_list]
+    
+    return authors_list

@@ -48,7 +48,7 @@ def get_dicts(df):
         # Construct the authors dictionary
         authors_d = add_authors(authors_d, record)
 
-        # Construct the papers dictionary
+
 
     return authors_d, papers_d , institutions_d
 

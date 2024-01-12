@@ -1,7 +1,11 @@
 import pandas as pd
 from pathlib import Path
+import math
+from collections import defaultdict
+from pprint import pprint
 
 
+# Ingestion functions
 def ingest_csv():
     data_file = Path('..')/'data'/'test_data'/'savedrecs.txt'
     df = pd.read_csv(data_file, sep='\t')
@@ -40,30 +44,41 @@ def get_dicts(df):
     institutions_d = dict()
 
     for idx,record in df.iterrows():
-        
-        # Add authors
+
+        # Construct the authors dictionary
         authors_d = add_authors(authors_d, record)
-    
+
+        # Construct the papers dictionary
+
     return authors_d, papers_d , institutions_d
 
 
+# Author related functions
 def add_authors(authors_d, record):
     
     wos_identifier = record['Accession Number']
     authors_dicts = get_authors_dicts(record)
 
-
+    #pprint(authors_dicts)
     for author_dict in authors_dicts:
         if author_dict['full name'] in authors_d:
+            #print("Bingo!")
+            #print('author_dict: ')
+            #pprint( author_dict)
+            #print('Before: ', authors_d['Passian, Ali'])
             authors_d[author_dict['full name']]['papers'].append(wos_identifier)
+            #print('After: ', authors_d['Passian, Ali'])
+            authors_d[author_dict['full name']]['institution history']+= \
+                author_dict['institution history']
         else:
             authors_d[author_dict['full name']] = author_dict
-            
+        
     return authors_d
 
 
 def get_authors_dicts(record):
 
+    # Useful record Fields
     wos_identifier = record['Accession Number']
     
     authors_list = record['Authors'].split(';')
@@ -72,11 +87,57 @@ def get_authors_dicts(record):
     author_full_name_list = record['Author Full Name'].split(';')
     author_full_name_list = [item.strip(' ') for item in author_full_name_list]
 
+    authors_inst_dict = get_author_inst_dict(record)
+
     authors_dicts = list()
     for name, full_name in zip(authors_list, author_full_name_list):
         authors_dicts.append({'name':name, 
                              'full name':full_name, 
-                             'papers':[wos_identifier]})
+                             'papers':[wos_identifier],
+                             'institution history':authors_inst_dict[full_name]})
         
     return authors_dicts
 
+
+def get_author_inst_dict(record):
+    authors_inst_dict = defaultdict(list)
+    year = record['Year Published']
+    
+    target = record['Author Address']
+
+    fields = no_nest_split(target)
+    for field in fields:
+        cut = field.find(']')
+        author_list = field[1:cut].split(';')
+        author_list = [item.strip(' ') for item in author_list]
+        inst = field[cut+1:].strip(' ')
+        for author in author_list:
+            authors_inst_dict[author].append((year,inst))
+
+    return authors_inst_dict
+
+
+def no_nest_split(target):
+    
+    # Unfortunately the data has some nans here
+    if target!=target:
+        return []
+    
+    detect = True
+    sep_indices = list()
+    
+    for idx, item in enumerate(target):
+        if item in '[]':
+            detect = not detect
+        elif item==';' and detect:
+            sep_indices.append(idx)
+ 
+    split_target = list()
+    start_idx = 0
+    for idx in sep_indices:
+        stop_idx = idx
+        split_target.append(target[start_idx:stop_idx].strip(' '))
+        start_idx = stop_idx+1
+    split_target.append(target[start_idx:].strip(' '))
+        
+    return split_target

@@ -33,6 +33,7 @@ def get_wos_labels_dict():
     dict_info['PT'] = 'Publication Type'
     dict_info['OI'] = 'ORCID Identifier'
     dict_info['Z9'] = 'Total Times Cited Count'
+    dict_info['ID'] = 'Keywords Plus'
 
     return dict_info
 
@@ -48,7 +49,11 @@ def get_dicts(df):
         # Construct the authors dictionary
         authors_d = add_authors(authors_d, record)
 
+        # Construct the papers dictionary
+        papers_d = add_papers(papers_d, record)
 
+        # Construct the institutions related dictionary
+        institutions_d = add_institutions(institutions_d, record)
 
     return authors_d, papers_d , institutions_d
 
@@ -117,6 +122,78 @@ def get_author_inst_dict(record):
     return authors_inst_dict
 
 
+# Papers related functions
+def add_papers(papers_d, record):
+    wos_identifier = record['Accession Number']
+    
+    authors_list = record['Author Full Name'].split(';')
+    authors_list = [item.strip(' ') for item in authors_list]
+
+    publication_type = record['Publication Type']
+    title = record['Document Title']
+
+    publication_name = record['Publication Name']
+    abstract = record['Abstract']
+    cited_references = record['Cited References']
+
+    publication_date = record['Publication Date']
+    year_published = record ['Year Published']
+    doi = record['Digital Object Identifier (DOI)']
+
+    institutions = get_record_institutions(record)
+    keywords = record['Author Keywords']
+    keywords_plus = record['Keywords Plus'] 
+    funding = record['Funding Agency and Grant Number']
+
+    papers_d[wos_identifier] = {'wos_identifier': wos_identifier,
+                                'authors': authors_list,
+                                'publication type': publication_type,
+                                'title':title,
+                                'publication name':publication_name,
+                                'abstract': abstract,
+                                'cited references': cited_references,
+                                'publication date': publication_date,
+                                'publication year': year_published,
+                                'doi': doi,
+                                'institutions': institutions,
+                                'keywords': keywords,
+                                'keywords plus': keywords_plus,
+                                'funding': funding
+                                }
+
+    return papers_d
+
+
+def get_record_institutions(record):
+    authors_inst_dict= get_author_inst_dict(record)
+    institutions_ll = list(authors_inst_dict.values())
+    institutions = list()
+    for sub_list in institutions_ll:
+        for item in sub_list:
+            institutions.append(item[1])
+    institutions=list(set(institutions))
+
+    return institutions
+
+
+# Institutions related functions
+def add_institutions(institutions_d, record):
+    wos_identifier = record['Accession Number']
+    institutions = get_record_institutions(record)
+    for institution in institutions:
+
+        if institution not in institutions_d:
+            country = institution.split(',')[-1].strip(' ')
+            if ' USA' in country:
+                country='USA'
+            institutions_d[institution]={'institution name': institution,
+                                         'country': country,
+                                         'papers': [wos_identifier]}
+        else:
+            institutions_d[institution]['papers'].append(wos_identifier)
+    return institutions_d
+
+# Auxiliary functions
 def no_nest_split(target):
     
     # Unfortunately the data has some nans here

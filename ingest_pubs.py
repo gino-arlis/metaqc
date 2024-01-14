@@ -6,8 +6,7 @@ from pprint import pprint
 
 
 # Ingestion functions
-def ingest_csv():
-    data_file = Path('..')/'data'/'test_data'/'savedrecs.txt'
+def ingest_csv_file(data_file):
     df = pd.read_csv(data_file, sep='\t')
 
     dict_info = get_wos_labels_dict()

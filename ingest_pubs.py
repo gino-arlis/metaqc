@@ -6,6 +6,20 @@ from pprint import pprint
 
 
 # Ingestion functions
+
+def get_data_folder_data(data_folder):
+    
+    dataframes = list()
+    for file in data_folder.glob('*.txt'):
+        file_df = ingest_csv_file(file)
+        print('file: ',file,'Number of papers: ', len(file_df))
+        dataframes.append(file_df)
+  
+    df = pd.concat(dataframes, axis=0)
+    print('Total number of papers: ',len(df))
+    return df
+
+
 def ingest_csv_file(data_file):
     df = pd.read_csv(data_file, sep='\t')
 
@@ -217,3 +231,14 @@ def no_nest_split(target):
     split_target.append(target[start_idx:].strip(' '))
         
     return split_target
+
+
+def sample_dict(target_d):
+    import random
+    from pprint import pprint
+
+    random_element = random.choice(list(target_d.keys()))
+    print(random_element)
+    pprint(target_d[random_element])
+
+    return

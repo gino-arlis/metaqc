@@ -6,7 +6,7 @@ from collections import defaultdict
 import networkx as nx
 import itertools
 
-color_discrete_map= defaultdict(lambda:'yellow')
+color_discrete_map= defaultdict(lambda:'black')
 color_discrete_map = {'USA':'blue',
                       'Canada': 'cyan',
                       'Germany': 'lightblue',

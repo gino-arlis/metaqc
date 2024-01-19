@@ -1,10 +1,13 @@
 from collections import Counter
-import pandas as pd
-import plotly.express as px
+import itertools
 import pickle
 from collections import defaultdict
+
+import pandas as pd
+import plotly.express as px
 import networkx as nx
-import itertools
+import matplotlib.pyplot as plt
+
 
 color_discrete_map= defaultdict(lambda:'black')
 color_discrete_map = {'USA':'blue',
@@ -12,7 +15,9 @@ color_discrete_map = {'USA':'blue',
                       'Germany': 'lightblue',
                       'Peoples R China': 'red',
                       'Austria': 'green',
-                      'Switzerland': 'brown'}
+                      'Switzerland': 'brown',
+                      'Singapore':'orange'}
+
 def load_dictionaries():
     with open('authors_d.pickle', 'rb') as handle:
         authors_d = pickle.load(handle)
@@ -159,3 +164,55 @@ def get_inst_graph(institutions_d, cut_off = 20):
     G.add_edges_from(edges)
 
     return G
+
+
+def plot_inst_graph(G, institutions_d, gcc=False):
+
+    if gcc:
+        Gcc = sorted(nx.connected_components(G), 
+                     key=len, 
+                     reverse=True)
+        G = G.subgraph(Gcc[0])
+
+    # Define node colors
+    color_map=list()
+    for node in G:
+        country = institutions_d[node]['country']
+        if country not in color_discrete_map:
+            color = 'yellow'
+        else:
+            color = color_discrete_map[country]
+        color_map.append(color)
+
+    # Define node sizes
+    node_size = list()
+    for node in G:
+        size = len(institutions_d[node]['papers'])
+        node_size.append(size)
+    max_node = max(node_size)
+    min_node = min(node_size)
+    factor = (200-10)/(max_node-min_node)
+    node_size = [(size-min_node)*factor+10 for size in node_size]
+    
+    # Define node labels
+    labels={}
+    for node in G:
+        if len(institutions_d[node]['papers'])>9:
+            labels[node]=','.join(node.split(',')[0:-2])
+
+            
+    edges=G.edges()
+    weights=[4 for u,v in G.edges()]
+
+    plt.figure(figsize=(14,14))
+    nx.draw(G, 
+            with_labels=True, 
+            labels=labels,
+            node_color=color_map, 
+            font_size=10,
+            font_color='darkgreen',
+            node_size=node_size)
+    
+    plt.show()
+
+    return

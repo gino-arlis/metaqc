@@ -60,6 +60,7 @@ def get_dicts(df):
     for idx,record in df.iterrows():
 
         # Construct the authors dictionary
+        print('Before adding author for ', idx)
         authors_d = add_authors(authors_d, record)
 
         # Construct the papers dictionary
@@ -98,7 +99,7 @@ def get_authors_dicts(record):
 
     # Useful record Fields
     wos_identifier = record['Accession Number']
-    
+    print('*', record)
     authors_list = record['Authors'].split(';')
     authors_list = [item.strip(' ') for item in authors_list]
     
